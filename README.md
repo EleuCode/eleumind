@@ -34,3 +34,8 @@ flutter run
 
 ## License
 This project is licensed under the **GNU GPL v3** - see [LICENSE](./LICENSE).  
+
+---
+
+## Code of Conduct
+Participation in this project is governed by the [Code of Conduct](./CODE_OF_CONDUCT.md).
