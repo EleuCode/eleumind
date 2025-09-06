@@ -16,6 +16,11 @@ EleuMind is a **private, free, open source meditation app** developed by **EleuC
 
 ---
 
+## Roadmap
+See [ROADMAP.md](./ROADMAP.md) for planned features and milestones.
+
+---
+
 ## Development
 This project uses [Flutter](https://flutter.dev/).  
 
