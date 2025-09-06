@@ -133,6 +133,7 @@ jobs:
       
       - uses: subosito/flutter-action@v2
         with:
+          flutter-version: '3.35.0'
           channel: 'stable'
           cache: true
       
