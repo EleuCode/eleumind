@@ -21,8 +21,19 @@
  */
 
 import 'package:flutter/material.dart';
-import 'app.dart';
+import 'screens/timer_screen.dart';
 
-void main() {
-  runApp(const EleuMindApp());
+class EleuMindApp extends StatelessWidget {
+  const EleuMindApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'EleuMind',
+      debugShowCheckedModeBanner: false,
+      themeMode: ThemeMode.dark, // dark by default.
+      theme: ThemeData.dark(useMaterial3: true),
+      home: const TimerScreen(),
+    );
+  }
 }
