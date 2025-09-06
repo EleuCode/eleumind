@@ -15,8 +15,12 @@ jobs:
       
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.19.0'
+          flutter-version: '3.35.3'
           channel: 'stable'
+          cache: true
+      
+      - name: Flutter version
+        run: flutter --version
       
       - name: Install dependencies
         run: flutter pub get
@@ -36,8 +40,12 @@ jobs:
       
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.19.0'
+          flutter-version: '3.35.3'
           channel: 'stable'
+          cache: true
+      
+      - name: Flutter version
+        run: flutter --version
       
       - name: Install dependencies
         run: flutter pub get
@@ -66,8 +74,12 @@ jobs:
       
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.19.0'
+          flutter-version: '3.35.3'
           channel: 'stable'
+          cache: true
+      
+      - name: Flutter version
+        run: flutter --version
       
       - name: Install dependencies
         run: flutter pub get
@@ -101,8 +113,12 @@ jobs:
       
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.19.0'
+          flutter-version: '3.35.3'
           channel: 'stable'
+          cache: true
+      
+      - name: Flutter version
+        run: flutter --version
       
       - name: Install dependencies
         run: flutter pub get
@@ -133,7 +149,7 @@ jobs:
       
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.35.0'
+          flutter-version: '3.35.3'
           channel: 'stable'
           cache: true
       
