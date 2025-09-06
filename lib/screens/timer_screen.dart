@@ -21,7 +21,6 @@
  */
 
 import 'package:flutter/material.dart';
-import 'dart:ui';
 
 enum TimerStatus { idle, running, paused }
 
@@ -42,7 +41,6 @@ class _TimerScreenState extends State<TimerScreen> {
       case TimerStatus.paused:
         return 'Paused';
       case TimerStatus.idle:
-      default:
         return 'Idle';
     }
   }
