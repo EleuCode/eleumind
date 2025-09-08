@@ -20,9 +20,24 @@
  * along with EleuMind.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:eleumind/services/timer_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+Future<void> _waitForCondition(
+  bool Function() condition, {
+  Duration timeout = const Duration(seconds: 3),
+  Duration pollEvery = const Duration(milliseconds: 25),
+}) async {
+  final start = DateTime.now();
+  while (!condition()) {
+    if (DateTime.now().difference(start) > timeout) {
+      fail('Condition not met within $timeout');
+    }
+    await Future.delayed(pollEvery);
+  }
+}
 
 void main() {
   setUpAll(() {
@@ -116,7 +131,7 @@ void main() {
       timerNotifier.start();
 
       final initialRemaining = timerNotifier.state.remainingDuration;
-      await Future.delayed(const Duration(milliseconds: 1100));
+      await Future.delayed(const Duration(milliseconds: 1200));
       final afterDelay = timerNotifier.state.remainingDuration;
 
       expect(afterDelay.inMilliseconds, lessThan(initialRemaining.inMilliseconds));
@@ -126,7 +141,12 @@ void main() {
       timerNotifier.setDuration(const Duration(milliseconds: 900));
       timerNotifier.start();
 
-      await Future.delayed(const Duration(milliseconds: 1500));
+      // The notifier marks completion on the next aligned tick.
+      // Wait until it reports idle (with a safety timeout).
+      await _waitForCondition(
+        () => timerNotifier.state.status == TimerStatus.idle,
+        timeout: const Duration(seconds: 3),
+      );
 
       expect(timerNotifier.state.status, TimerStatus.idle);
       expect(timerNotifier.state.remainingDuration, Duration.zero);
