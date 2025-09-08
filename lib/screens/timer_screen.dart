@@ -20,7 +20,6 @@
  * along with EleuMind.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/timer_service.dart';

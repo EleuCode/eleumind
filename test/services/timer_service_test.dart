@@ -20,7 +20,6 @@
  * along with EleuMind.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:eleumind/services/timer_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -141,8 +140,6 @@ void main() {
       timerNotifier.setDuration(const Duration(milliseconds: 900));
       timerNotifier.start();
 
-      // The notifier marks completion on the next aligned tick.
-      // Wait until it reports idle (with a safety timeout).
       await _waitForCondition(
         () => timerNotifier.state.status == TimerStatus.idle,
         timeout: const Duration(seconds: 3),
@@ -156,7 +153,8 @@ void main() {
   group('Lifecycle + recompute', () {
     test('rehydrates and recomputes after background/foreground with no drift', () async {
       DateTime t0 = DateTime(2025, 1, 1, 12, 0, 0);
-      DateTime Function() now = () => t0;
+
+      DateTime now() => t0;
 
       final notifier = TimerNotifier(now: now);
       notifier.setDuration(const Duration(seconds: 10));
@@ -181,7 +179,8 @@ void main() {
 
     test('process kill safety: new instance can resume from persisted snapshot', () async {
       DateTime t0 = DateTime(2025, 1, 1, 12, 0, 0);
-      DateTime Function() now = () => t0;
+
+      DateTime now() => t0;
 
       // Instance A
       final a = TimerNotifier(now: now);
