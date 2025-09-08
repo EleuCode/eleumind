@@ -96,7 +96,6 @@ class TimerNotifier extends StateNotifier<TimerState> {
         pausedDuration: Duration.zero,
       );
       _startTicker();
-      _updateRemainingTime();
     } else if (state.status == TimerStatus.paused) {
       resume();
     }
@@ -124,7 +123,6 @@ class TimerNotifier extends StateNotifier<TimerState> {
         startedAt: _now(),
       );
       _startTicker();
-      _updateRemainingTime();
     }
   }
 

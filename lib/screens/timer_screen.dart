@@ -52,7 +52,7 @@ class _TimerScreenState extends ConsumerState<TimerScreen> with WidgetsBindingOb
       case AppLifecycleState.paused:
       case AppLifecycleState.inactive:
       case AppLifecycleState.detached:
-      case AppLifecycleState.hidden: // <-- add this
+      case AppLifecycleState.hidden:
         notifier.onAppPaused();
         break;
       case AppLifecycleState.resumed:
@@ -96,6 +96,7 @@ class _TimerScreenState extends ConsumerState<TimerScreen> with WidgetsBindingOb
                   ExcludeSemantics(
                     child: Text(
                       formatDuration(timerState.remainingDuration),
+                      key: const Key('timerText'),
                       style: textTheme.displayLarge?.copyWith(
                         fontFeatures: const [FontFeature.tabularFigures()],
                       ),
