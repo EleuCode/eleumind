@@ -100,7 +100,6 @@ void main() {
       final firstPauseRemaining = timerNotifier.state.remainingDuration;
 
       await Future.delayed(const Duration(milliseconds: 400));
-      // still paused
       expect(timerNotifier.state.remainingDuration, firstPauseRemaining);
 
       timerNotifier.resume();
@@ -141,7 +140,7 @@ void main() {
 
       final notifier = TimerNotifier(now: now);
       notifier.setDuration(const Duration(seconds: 10));
-      notifier.start(); // startedAt = t0
+      notifier.start();
 
       // Simulate 3s running, then app pause (persist)
       t0 = t0.add(const Duration(seconds: 3));

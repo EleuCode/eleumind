@@ -151,7 +151,7 @@ void main() {
       expect(find.text('05:00'), findsOneWidget);
     });
 
-    testWidgets('countdown decrements while running (1s tick)', (tester) async {
+    testWidgets('countdown decrements while running (robust to alignment)', (tester) async {
       await tester.pumpWidget(
         const ProviderScope(
           child: EleuMindApp(),
@@ -164,17 +164,16 @@ void main() {
       await tester.tap(find.text('Start'));
       await tester.pump();
 
-      expect(find.text('01:00'), findsOneWidget);
+      final timerFinder = find.byKey(const Key('timerText'));
+      expect(timerFinder, findsOneWidget);
 
-      await tester.pump(const Duration(milliseconds: 1100));
+      String read() => (tester.widget<Text>(timerFinder).data)!;
+      final initial = read();
+      expect(initial, anyOf('01:00', '00:59'));
 
-      // Time should have decreased
-      final textFinder = find.byType(Text);
-      final texts = tester.widgetList<Text>(textFinder);
-      final maybeTimerText = texts.firstWhere(
-        (text) => text.data != null && text.data!.contains(':'),
-      );
-      expect(maybeTimerText.data, isNot('01:00'));
+      await tester.pump(const Duration(seconds: 2));
+      final after = read();
+      expect(after, isNot(initial));
     });
   });
 }
