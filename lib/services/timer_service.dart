@@ -21,7 +21,10 @@
  */
 
 import 'dart:async';
+import 'dart:convert';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 enum TimerStatus { idle, running, paused }
 
@@ -65,10 +68,15 @@ class TimerState {
   }
 }
 
+typedef Now = DateTime Function();
+
 class TimerNotifier extends StateNotifier<TimerState> {
   Timer? _ticker;
+  final Now _now;
 
-  TimerNotifier() : super(TimerState.initial());
+  TimerNotifier({Now now = DateTime.now}) : _now = now, super(TimerState.initial());
+
+  static const _prefsKey = 'eleumind.timer.v1';
 
   void setDuration(Duration duration) {
     if (state.status == TimerStatus.idle) {
@@ -84,10 +92,11 @@ class TimerNotifier extends StateNotifier<TimerState> {
     if (state.status == TimerStatus.idle) {
       state = state.copyWith(
         status: TimerStatus.running,
-        startedAt: DateTime.now(),
+        startedAt: _now(),
         pausedDuration: Duration.zero,
       );
       _startTicker();
+      _updateRemainingTime();
     } else if (state.status == TimerStatus.paused) {
       resume();
     }
@@ -96,9 +105,7 @@ class TimerNotifier extends StateNotifier<TimerState> {
   void pause() {
     if (state.status == TimerStatus.running) {
       _ticker?.cancel();
-      
-      // Calculate elapsed time since start or last resume.
-      final elapsed = DateTime.now().difference(state.startedAt!);
+      final elapsed = _now().difference(state.startedAt!);
       final totalElapsed = elapsed + (state.pausedDuration ?? Duration.zero);
       final remaining = state.totalDuration - totalElapsed;
 
@@ -114,10 +121,10 @@ class TimerNotifier extends StateNotifier<TimerState> {
     if (state.status == TimerStatus.paused) {
       state = state.copyWith(
         status: TimerStatus.running,
-        startedAt: DateTime.now(),
-        // Keep the pausedDuration to calculate total elapsed correctly.
+        startedAt: _now(),
       );
       _startTicker();
+      _updateRemainingTime();
     }
   }
 
@@ -126,18 +133,49 @@ class TimerNotifier extends StateNotifier<TimerState> {
     state = TimerState.initial(duration: state.totalDuration);
   }
 
+  Future<void> onAppPaused() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = _toPersistable(state);
+    await prefs.setString(_prefsKey, raw);
+    _ticker?.cancel();
+  }
+
+  Future<void> onAppResumed() async {
+    final prefs = await SharedPreferences.getInstance();
+    final saved = prefs.getString(_prefsKey);
+    if (saved == null) return;
+
+    final restored = _fromPersistable(saved);
+    if (restored != null) {
+      final recomputed = _recompute(restored);
+      state = recomputed;
+      if (state.status == TimerStatus.running) {
+        _startTicker();
+      }
+    }
+    await prefs.remove(_prefsKey);
+  }
+
   void _startTicker() {
     _ticker?.cancel();
-    _ticker = Timer.periodic(const Duration(milliseconds: 100), (_) {
+
+    final now = _now();
+    final msToNextSecond = 1000 - now.millisecond;
+    final adjusted = msToNextSecond - (now.microsecond > 0 ? 1 : 0);
+    final initialDelay = Duration(milliseconds: adjusted.clamp(1, 1000));
+
+    _ticker = Timer(initialDelay, () {
       _updateRemainingTime();
+      _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
+        _updateRemainingTime();
+      });
     });
   }
 
   void _updateRemainingTime() {
     if (state.status != TimerStatus.running) return;
 
-    // Wall-clock safe calculation.
-    final elapsed = DateTime.now().difference(state.startedAt!);
+    final elapsed = _now().difference(state.startedAt!);
     final totalElapsed = elapsed + (state.pausedDuration ?? Duration.zero);
     final remaining = state.totalDuration - totalElapsed;
 
@@ -147,9 +185,50 @@ class TimerNotifier extends StateNotifier<TimerState> {
         remainingDuration: Duration.zero,
         status: TimerStatus.idle,
       );
-      // Timer completed - could trigger a callback here.
     } else {
       state = state.copyWith(remainingDuration: remaining);
+    }
+  }
+
+  TimerState _recompute(TimerState snapshot) {
+    if (snapshot.status == TimerStatus.running) {
+      final elapsed = _now().difference(snapshot.startedAt!);
+      final totalElapsed = elapsed + (snapshot.pausedDuration ?? Duration.zero);
+      final remaining = snapshot.totalDuration - totalElapsed;
+      if (remaining <= Duration.zero) {
+        return snapshot.copyWith(
+          status: TimerStatus.idle,
+          remainingDuration: Duration.zero,
+        );
+      }
+      return snapshot.copyWith(remainingDuration: remaining);
+    }
+    return snapshot;
+  }
+
+  String _toPersistable(TimerState s) {
+    final json = {
+      'total': s.totalDuration.inMilliseconds,
+      'remaining': s.remainingDuration.inMilliseconds,
+      'status': s.status.index,
+      'startedAt': s.startedAt?.toIso8601String(),
+      'paused': s.pausedDuration?.inMilliseconds,
+    };
+    return jsonEncode(json);
+  }
+
+  TimerState? _fromPersistable(String raw) {
+    try {
+      final j = jsonDecode(raw) as Map<String, dynamic>;
+      return TimerState(
+        totalDuration: Duration(milliseconds: j['total'] as int),
+        remainingDuration: Duration(milliseconds: j['remaining'] as int),
+        status: TimerStatus.values[j['status'] as int],
+        startedAt: (j['startedAt'] as String?) != null ? DateTime.parse(j['startedAt'] as String) : null,
+        pausedDuration: (j['paused'] as int?) != null ? Duration(milliseconds: j['paused'] as int) : null,
+      );
+    } catch (_) {
+      return null;
     }
   }
 
@@ -160,12 +239,10 @@ class TimerNotifier extends StateNotifier<TimerState> {
   }
 }
 
-// Provider definition.
 final timerProvider = StateNotifierProvider<TimerNotifier, TimerState>((ref) {
   return TimerNotifier();
 });
 
-// Convenience providers.
 final timerStatusProvider = Provider<TimerStatus>((ref) {
   return ref.watch(timerProvider).status;
 });
@@ -174,7 +251,6 @@ final remainingDurationProvider = Provider<Duration>((ref) {
   return ref.watch(timerProvider).remainingDuration;
 });
 
-// Format duration for display (total minutes:seconds).
 String formatDuration(Duration duration) {
   final minutes = duration.inMinutes;
   final seconds = duration.inSeconds.remainder(60);

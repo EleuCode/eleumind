@@ -20,15 +20,49 @@
  * along with EleuMind.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/timer_service.dart';
 
-class TimerScreen extends ConsumerWidget {
+class TimerScreen extends ConsumerStatefulWidget {
   const TimerScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<TimerScreen> createState() => _TimerScreenState();
+}
+
+class _TimerScreenState extends ConsumerState<TimerScreen> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    final notifier = ref.read(timerProvider.notifier);
+    switch (state) {
+      case AppLifecycleState.paused:
+      case AppLifecycleState.inactive:
+      case AppLifecycleState.detached:
+      case AppLifecycleState.hidden: // <-- add this
+        notifier.onAppPaused();
+        break;
+      case AppLifecycleState.resumed:
+        notifier.onAppResumed();
+        break;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final timerState = ref.watch(timerProvider);
     final timerNotifier = ref.read(timerProvider.notifier);
     final textTheme = Theme.of(context).textTheme;
@@ -57,7 +91,7 @@ class TimerScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 32),
                   ],
-                  
+
                   // Countdown display.
                   ExcludeSemantics(
                     child: Text(
@@ -68,14 +102,14 @@ class TimerScreen extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  
+
                   // Status label.
                   Text(
                     _getStatusLabel(timerState.status),
                     style: textTheme.titleMedium,
                   ),
                   const SizedBox(height: 32),
-                  
+
                   // Control buttons.
                   _ControlButtons(
                     status: timerState.status,

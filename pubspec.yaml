@@ -1,5 +1,5 @@
 name: eleumind
-description: "A new Flutter project."
+description: "A privacy-first, offline meditation timer."
 publish_to: 'none'
 version: 0.1.0+1
 
@@ -10,6 +10,7 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_riverpod: ^2.6.1
+  shared_preferences: ^2.3.2
   cupertino_icons: ^1.0.8
 
 dev_dependencies:
