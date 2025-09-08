@@ -33,7 +33,7 @@ void main() {
         child: EleuMindApp(),
       ),
     );
-    
+
     expect(find.byType(MaterialApp), findsOneWidget);
   });
 
@@ -43,7 +43,7 @@ void main() {
         child: EleuMindApp(),
       ),
     );
-    
+
     final app = tester.widget<MaterialApp>(find.byType(MaterialApp));
     expect(app.themeMode, ThemeMode.dark);
   });
@@ -54,7 +54,7 @@ void main() {
         child: EleuMindApp(),
       ),
     );
-    
+
     expect(find.byType(TimerScreen), findsOneWidget);
   });
 }

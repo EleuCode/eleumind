@@ -74,7 +74,9 @@ class TimerNotifier extends StateNotifier<TimerState> {
   Timer? _ticker;
   final Now _now;
 
-  TimerNotifier({Now now = DateTime.now}) : _now = now, super(TimerState.initial());
+  TimerNotifier({Now now = DateTime.now})
+      : _now = now,
+        super(TimerState.initial());
 
   static const _prefsKey = 'eleumind.timer.v1';
 
@@ -222,8 +224,12 @@ class TimerNotifier extends StateNotifier<TimerState> {
         totalDuration: Duration(milliseconds: j['total'] as int),
         remainingDuration: Duration(milliseconds: j['remaining'] as int),
         status: TimerStatus.values[j['status'] as int],
-        startedAt: (j['startedAt'] as String?) != null ? DateTime.parse(j['startedAt'] as String) : null,
-        pausedDuration: (j['paused'] as int?) != null ? Duration(milliseconds: j['paused'] as int) : null,
+        startedAt: (j['startedAt'] as String?) != null
+            ? DateTime.parse(j['startedAt'] as String)
+            : null,
+        pausedDuration: (j['paused'] as int?) != null
+            ? Duration(milliseconds: j['paused'] as int)
+            : null,
       );
     } catch (_) {
       return null;

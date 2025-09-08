@@ -151,7 +151,8 @@ void main() {
       expect(find.text('05:00'), findsOneWidget);
     });
 
-    testWidgets('countdown decrements while running (robust to alignment)', (tester) async {
+    testWidgets('countdown decrements while running (robust to alignment)',
+        (tester) async {
       await tester.pumpWidget(
         const ProviderScope(
           child: EleuMindApp(),

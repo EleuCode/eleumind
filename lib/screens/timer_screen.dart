@@ -31,7 +31,8 @@ class TimerScreen extends ConsumerStatefulWidget {
   ConsumerState<TimerScreen> createState() => _TimerScreenState();
 }
 
-class _TimerScreenState extends ConsumerState<TimerScreen> with WidgetsBindingObserver {
+class _TimerScreenState extends ConsumerState<TimerScreen>
+    with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();

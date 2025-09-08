@@ -64,7 +64,8 @@ void main() {
       timerNotifier.setDuration(const Duration(minutes: 10));
 
       expect(timerNotifier.state.totalDuration, const Duration(minutes: 10));
-      expect(timerNotifier.state.remainingDuration, const Duration(minutes: 10));
+      expect(
+          timerNotifier.state.remainingDuration, const Duration(minutes: 10));
     });
 
     test('setDuration does not update when running', () {
@@ -103,10 +104,12 @@ void main() {
 
       expect(timerNotifier.state.status, TimerStatus.idle);
       expect(timerNotifier.state.totalDuration, const Duration(minutes: 10));
-      expect(timerNotifier.state.remainingDuration, const Duration(minutes: 10));
+      expect(
+          timerNotifier.state.remainingDuration, const Duration(minutes: 10));
     });
 
-    test('multiple pause/resume cycles maintain correct time (approx)', () async {
+    test('multiple pause/resume cycles maintain correct time (approx)',
+        () async {
       timerNotifier.setDuration(const Duration(seconds: 4));
       timerNotifier.start();
       await Future.delayed(const Duration(milliseconds: 400));
@@ -133,7 +136,8 @@ void main() {
       await Future.delayed(const Duration(milliseconds: 1200));
       final afterDelay = timerNotifier.state.remainingDuration;
 
-      expect(afterDelay.inMilliseconds, lessThan(initialRemaining.inMilliseconds));
+      expect(
+          afterDelay.inMilliseconds, lessThan(initialRemaining.inMilliseconds));
     });
 
     test('timer completes and returns to idle when time runs out', () async {
@@ -151,7 +155,8 @@ void main() {
   });
 
   group('Lifecycle + recompute', () {
-    test('rehydrates and recomputes after background/foreground with no drift', () async {
+    test('rehydrates and recomputes after background/foreground with no drift',
+        () async {
       DateTime t0 = DateTime(2025, 1, 1, 12, 0, 0);
 
       DateTime now() => t0;
@@ -177,7 +182,8 @@ void main() {
       notifier.dispose();
     });
 
-    test('process kill safety: new instance can resume from persisted snapshot', () async {
+    test('process kill safety: new instance can resume from persisted snapshot',
+        () async {
       DateTime t0 = DateTime(2025, 1, 1, 12, 0, 0);
 
       DateTime now() => t0;
