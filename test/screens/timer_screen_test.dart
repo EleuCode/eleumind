@@ -24,8 +24,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:eleumind/app.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
+  setUpAll(() {
+    SharedPreferences.setMockInitialValues({});
+  });
+
   group('TimerScreen', () {
     testWidgets('shows initial duration and Ready status', (tester) async {
       await tester.pumpWidget(
@@ -101,7 +106,7 @@ void main() {
 
       await tester.tap(find.text('Start'));
       await tester.pump();
-      
+
       await tester.tap(find.text('Pause'));
       await tester.pump();
 
@@ -119,10 +124,10 @@ void main() {
 
       await tester.tap(find.text('Start'));
       await tester.pump();
-      
+
       await tester.tap(find.text('Pause'));
       await tester.pump();
-      
+
       await tester.tap(find.text('Resume'));
       await tester.pump();
 
@@ -138,7 +143,7 @@ void main() {
 
       await tester.tap(find.text('Start'));
       await tester.pump();
-      
+
       await tester.tap(find.text('Stop'));
       await tester.pump();
 
@@ -146,33 +151,30 @@ void main() {
       expect(find.text('05:00'), findsOneWidget);
     });
 
-    testWidgets('countdown decrements while running', (tester) async {
+    testWidgets('countdown decrements while running (1s tick)', (tester) async {
       await tester.pumpWidget(
         const ProviderScope(
           child: EleuMindApp(),
         ),
       );
 
-      // Set a short duration for testing.
       await tester.tap(find.text('1 min'));
       await tester.pump();
 
       await tester.tap(find.text('Start'));
       await tester.pump();
-      
+
       expect(find.text('01:00'), findsOneWidget);
-      
-      // Wait a bit and pump periodically.
+
       await tester.pump(const Duration(milliseconds: 1100));
-      
-      // Time should have decreased.
+
+      // Time should have decreased
       final textFinder = find.byType(Text);
       final texts = tester.widgetList<Text>(textFinder);
-      final timerText = texts.firstWhere(
+      final maybeTimerText = texts.firstWhere(
         (text) => text.data != null && text.data!.contains(':'),
       );
-      
-      expect(timerText.data, isNot('01:00'));
+      expect(maybeTimerText.data, isNot('01:00'));
     });
   });
 }
