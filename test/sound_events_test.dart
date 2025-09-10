@@ -89,7 +89,8 @@ void main() {
   testWidgets('Bells chime each minute with backfill (no duplicates)',
       (tester) async {
     final audio = CountingFakeAudioService();
-    await tester.pumpWidget(_scopeWith(audioFake: audio, child: const EleuMindApp()));
+    await tester
+        .pumpWidget(_scopeWith(audioFake: audio, child: const EleuMindApp()));
 
     // Select a long session (20 min)
     await tester.tap(find.text('20 min'));
@@ -120,7 +121,8 @@ void main() {
   testWidgets('Gong plays exactly once at finish (no interval bell at finish)',
       (tester) async {
     final audio = CountingFakeAudioService();
-    await tester.pumpWidget(_scopeWith(audioFake: audio, child: const EleuMindApp()));
+    await tester
+        .pumpWidget(_scopeWith(audioFake: audio, child: const EleuMindApp()));
 
     // 1-minute session
     await tester.tap(find.text('1 min'));
@@ -140,13 +142,15 @@ void main() {
     await _flush(tester);
 
     expect(audio.gongCount, 1);
-    expect(audio.bellCount, 0); // interval is 1 minute; we clamp away finish-bucket.
+    expect(audio.bellCount,
+        0); // interval is 1 minute; we clamp away finish-bucket.
   });
 
   testWidgets('STOP resets bell index so next session rings again',
       (tester) async {
     final audio = CountingFakeAudioService();
-    await tester.pumpWidget(_scopeWith(audioFake: audio, child: const EleuMindApp()));
+    await tester
+        .pumpWidget(_scopeWith(audioFake: audio, child: const EleuMindApp()));
 
     await tester.tap(find.text('20 min'));
     await tester.pump();
