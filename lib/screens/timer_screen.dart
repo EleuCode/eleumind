@@ -23,6 +23,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/timer_service.dart';
+import '../services/audio_service_provider.dart';
 
 class TimerScreen extends ConsumerStatefulWidget {
   const TimerScreen({super.key});
@@ -33,15 +34,120 @@ class TimerScreen extends ConsumerStatefulWidget {
 
 class _TimerScreenState extends ConsumerState<TimerScreen>
     with WidgetsBindingObserver {
+  // Use 1 minute while testing on web; switch back to 5 for production.
+  static const Duration _bellInterval = Duration(minutes: 1);
+
+  /// Last interval index we rang. Starts at -1 so the first bell is index 1.
+  int _lastBellBucket = -1;
+
+  /// Prevent overlapping bell sequences (important on Web).
+  bool _bellSequenceActive = false;
+
+  /// Gap between backfilled bells so they sound distinct on Web.
+  static const Duration _bellGap = Duration(milliseconds: 500);
+
+  ProviderSubscription<TimerState>? _timerSub;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+
+    // Preload audio once the widget is alive.
+    Future.microtask(() => ref.read(audioServiceProvider).preload());
   }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    _timerSub ??= ref.listenManual<TimerState>(
+      timerProvider,
+      (prev, next) async {
+        final audio = ref.read(audioServiceProvider);
+
+        // Natural finish -> gong + reset.
+        if (_finishedByCountdown(prev, next)) {
+          _bellSequenceActive = false;
+          _lastBellBucket = -1;
+          await audio.playGong();
+          return;
+        }
+
+        // Manual STOP -> reset bucket + cancel any bell sequence.
+        final stoppedManually = (prev?.status == TimerStatus.running ||
+                prev?.status == TimerStatus.paused) &&
+            next.status == TimerStatus.idle &&
+            next.remainingDuration == next.totalDuration;
+        if (stoppedManually) {
+          _bellSequenceActive = false;
+          _lastBellBucket = -1;
+        }
+
+        // While running, compute the bell index and backfill missed ones.
+        if (next.status == TimerStatus.running && _bellInterval.inSeconds > 0) {
+          final elapsed = _elapsed(next);
+          final intervalSec = _bellInterval.inSeconds;
+
+          // How many full intervals have elapsed since start:
+          // 0..N, where 0 means < 1 interval has passed.
+          int currentIndex = elapsed.inSeconds ~/ intervalSec;
+
+          // Do NOT ring the "finish" bucket: clamp to last bell index strictly before end.
+          final totalSec = next.totalDuration.inSeconds;
+          final maxBellIndex =
+              (totalSec - 1) ~/ intervalSec; // e.g., 5min total @1min -> 4
+          if (currentIndex > maxBellIndex) currentIndex = maxBellIndex;
+
+          // We only ring indices >= 1.
+          if (currentIndex >= 1 && currentIndex > _lastBellBucket) {
+            // Next index we need to ring (never 0).
+            final startIndex =
+                (_lastBellBucket + 1) < 1 ? 1 : (_lastBellBucket + 1);
+            final endIndex = currentIndex;
+
+            // If a sequence is already in progress, don't start another.
+            if (!_bellSequenceActive && endIndex >= startIndex) {
+              _playBellSequence(startIndex, endIndex, audio);
+            }
+          }
+        }
+      },
+    );
+  }
+
+  /// Play bells for indices [startIndex..endIndex], spacing them so they are audible on Web.
+  Future<void> _playBellSequence(
+      int startIndex, int endIndex, dynamic audio) async {
+    _bellSequenceActive = true;
+    try {
+      for (var idx = startIndex; idx <= endIndex; idx++) {
+        await audio.playBell();
+        _lastBellBucket = idx;
+
+        // Small gap so sequential bells sound distinct (Web + single player).
+        // If you later block on play completion in AudioService, you can remove this.
+        await Future.delayed(_bellGap);
+      }
+    } finally {
+      _bellSequenceActive = false;
+    }
+  }
+
+  bool _finishedByCountdown(TimerState? prev, TimerState next) {
+    final prevWasActive = prev?.status == TimerStatus.running ||
+        prev?.status == TimerStatus.paused;
+    return prevWasActive == true &&
+        next.status == TimerStatus.idle &&
+        next.remainingDuration == Duration.zero;
+  }
+
+  Duration _elapsed(TimerState s) => s.totalDuration - s.remainingDuration;
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _timerSub?.close();
     super.dispose();
   }
 
@@ -81,7 +187,6 @@ class _TimerScreenState extends ConsumerState<TimerScreen>
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Timer duration selector (only visible when idle).
                   if (timerState.status == TimerStatus.idle) ...[
                     _DurationSelector(
                       duration: timerState.totalDuration,
@@ -92,7 +197,7 @@ class _TimerScreenState extends ConsumerState<TimerScreen>
                     const SizedBox(height: 32),
                   ],
 
-                  // Countdown display.
+                  // Countdown display
                   ExcludeSemantics(
                     child: Text(
                       formatDuration(timerState.remainingDuration),
@@ -104,14 +209,13 @@ class _TimerScreenState extends ConsumerState<TimerScreen>
                   ),
                   const SizedBox(height: 12),
 
-                  // Status label.
+                  // Status label
                   Text(
                     _getStatusLabel(timerState.status),
                     style: textTheme.titleMedium,
                   ),
                   const SizedBox(height: 32),
 
-                  // Control buttons.
                   _ControlButtons(
                     status: timerState.status,
                     onStart: timerNotifier.start,

@@ -1,8 +1,10 @@
 # EleuMind 🧘‍♂️  
-*A privacy-first, offline meditation timer.*
+*A privacy-first, offline meditation app.*
 
-![Status](https://img.shields.io/badge/status-pre--alpha-red)  
-![Platform](https://img.shields.io/badge/platform-Android%20%7C%20iOS%20%7C%20Web-brightgreen)  
+![Version](https://img.shields.io/badge/version-pre--alpha-red)
+![Platform](https://img.shields.io/badge/platform-Android%20%7C%20iOS-brightgreen)  
+![Flutter](https://img.shields.io/badge/flutter-3.35-blue)
+![Dart](https://img.shields.io/badge/dart-3.9.2-blue)  
 
 ---
 
@@ -43,4 +45,13 @@ Participation in this project is governed by the [Code of Conduct](./CODE_OF_CON
 ---
 
 ## Contributing
+Contributions are welcome. 😊
+
 See [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines on contributing to this project.
+
+![GitHub issues](https://img.shields.io/github/issues/EleuCode/EleuMind)
+
+---
+
+## Acknowledgements
+Bell Sound Effect by <a href="https://pixabay.com/users/freesound_community-46691455/?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=72261">freesound_community</a> from <a href="https://pixabay.com//?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=72261">Pixabay</a>

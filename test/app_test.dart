@@ -25,12 +25,28 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:eleumind/app.dart';
 import 'package:eleumind/screens/timer_screen.dart';
+import 'package:eleumind/services/audio_service.dart';
+import 'package:eleumind/services/audio_service_provider.dart';
+
+class _FakeAudioService implements AudioService {
+  @override
+  Future<void> dispose() async {}
+  @override
+  Future<void> playBell() async {}
+  @override
+  Future<void> playGong() async {}
+  @override
+  Future<void> preload() async {}
+}
 
 void main() {
   testWidgets('App provides a MaterialApp shell', (tester) async {
     await tester.pumpWidget(
-      const ProviderScope(
-        child: EleuMindApp(),
+      ProviderScope(
+        overrides: [
+          audioServiceProvider.overrideWithValue(_FakeAudioService()),
+        ],
+        child: const EleuMindApp(),
       ),
     );
 
@@ -39,8 +55,11 @@ void main() {
 
   testWidgets('App uses dark theme mode by default', (tester) async {
     await tester.pumpWidget(
-      const ProviderScope(
-        child: EleuMindApp(),
+      ProviderScope(
+        overrides: [
+          audioServiceProvider.overrideWithValue(_FakeAudioService()),
+        ],
+        child: const EleuMindApp(),
       ),
     );
 
@@ -50,8 +69,11 @@ void main() {
 
   testWidgets('App home is TimerScreen', (tester) async {
     await tester.pumpWidget(
-      const ProviderScope(
-        child: EleuMindApp(),
+      ProviderScope(
+        overrides: [
+          audioServiceProvider.overrideWithValue(_FakeAudioService()),
+        ],
+        child: const EleuMindApp(),
       ),
     );
 

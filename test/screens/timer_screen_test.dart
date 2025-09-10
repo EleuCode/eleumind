@@ -24,31 +24,47 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:eleumind/app.dart';
+import 'package:eleumind/services/audio_service.dart';
+import 'package:eleumind/services/audio_service_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+// A minimal no-op fake so widget tests don't touch real audio/asset I/O.
+class _FakeAudioService implements AudioService {
+  @override
+  Future<void> dispose() async {}
+  @override
+  Future<void> playBell() async {}
+  @override
+  Future<void> playGong() async {}
+  @override
+  Future<void> preload() async {}
+}
+
+ProviderScope _testScope(Widget child) => ProviderScope(
+      overrides: [
+        // Ensure TimerScreen.initState() preload() is a no-op.
+        audioServiceProvider.overrideWithValue(_FakeAudioService()),
+      ],
+      child: child,
+    );
+
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   setUpAll(() {
     SharedPreferences.setMockInitialValues({});
   });
 
   group('TimerScreen', () {
     testWidgets('shows initial duration and Ready status', (tester) async {
-      await tester.pumpWidget(
-        const ProviderScope(
-          child: EleuMindApp(),
-        ),
-      );
+      await tester.pumpWidget(_testScope(const EleuMindApp()));
 
       expect(find.text('05:00'), findsOneWidget);
       expect(find.text('Ready'), findsOneWidget);
     });
 
     testWidgets('shows duration selector when idle', (tester) async {
-      await tester.pumpWidget(
-        const ProviderScope(
-          child: EleuMindApp(),
-        ),
-      );
+      await tester.pumpWidget(_testScope(const EleuMindApp()));
 
       expect(find.text('Select Duration'), findsOneWidget);
       expect(find.text('1 min'), findsOneWidget);
@@ -57,11 +73,7 @@ void main() {
     });
 
     testWidgets('changes duration when chip is selected', (tester) async {
-      await tester.pumpWidget(
-        const ProviderScope(
-          child: EleuMindApp(),
-        ),
-      );
+      await tester.pumpWidget(_testScope(const EleuMindApp()));
 
       await tester.tap(find.text('10 min'));
       await tester.pump();
@@ -70,11 +82,7 @@ void main() {
     });
 
     testWidgets('goes to Running when Start tapped', (tester) async {
-      await tester.pumpWidget(
-        const ProviderScope(
-          child: EleuMindApp(),
-        ),
-      );
+      await tester.pumpWidget(_testScope(const EleuMindApp()));
 
       await tester.tap(find.text('Start'));
       await tester.pump();
@@ -85,11 +93,7 @@ void main() {
     });
 
     testWidgets('hides duration selector when running', (tester) async {
-      await tester.pumpWidget(
-        const ProviderScope(
-          child: EleuMindApp(),
-        ),
-      );
+      await tester.pumpWidget(_testScope(const EleuMindApp()));
 
       await tester.tap(find.text('Start'));
       await tester.pump();
@@ -98,11 +102,7 @@ void main() {
     });
 
     testWidgets('goes to Paused when Pause tapped', (tester) async {
-      await tester.pumpWidget(
-        const ProviderScope(
-          child: EleuMindApp(),
-        ),
-      );
+      await tester.pumpWidget(_testScope(const EleuMindApp()));
 
       await tester.tap(find.text('Start'));
       await tester.pump();
@@ -116,11 +116,7 @@ void main() {
     });
 
     testWidgets('resumes when Resume tapped', (tester) async {
-      await tester.pumpWidget(
-        const ProviderScope(
-          child: EleuMindApp(),
-        ),
-      );
+      await tester.pumpWidget(_testScope(const EleuMindApp()));
 
       await tester.tap(find.text('Start'));
       await tester.pump();
@@ -135,11 +131,7 @@ void main() {
     });
 
     testWidgets('resets to Ready when Stop tapped', (tester) async {
-      await tester.pumpWidget(
-        const ProviderScope(
-          child: EleuMindApp(),
-        ),
-      );
+      await tester.pumpWidget(_testScope(const EleuMindApp()));
 
       await tester.tap(find.text('Start'));
       await tester.pump();
@@ -153,11 +145,7 @@ void main() {
 
     testWidgets('countdown decrements while running (robust to alignment)',
         (tester) async {
-      await tester.pumpWidget(
-        const ProviderScope(
-          child: EleuMindApp(),
-        ),
-      );
+      await tester.pumpWidget(_testScope(const EleuMindApp()));
 
       await tester.tap(find.text('1 min'));
       await tester.pump();
@@ -172,6 +160,7 @@ void main() {
       final initial = read();
       expect(initial, anyOf('01:00', '00:59'));
 
+      // Advance fake async timers.
       await tester.pump(const Duration(seconds: 2));
       final after = read();
       expect(after, isNot(initial));

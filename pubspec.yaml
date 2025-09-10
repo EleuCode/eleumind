@@ -12,6 +12,7 @@ dependencies:
   flutter_riverpod: ^2.6.1
   shared_preferences: ^2.3.2
   cupertino_icons: ^1.0.8
+  just_audio: ^0.10.5
 
 dev_dependencies:
   flutter_test:
@@ -20,3 +21,6 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/audio/bell.mp3
+    - assets/audio/gong.mp3

@@ -6,8 +6,8 @@ Features requiring network access are **opt-in** and disabled by default.
 ---
 
 ## v0.1 – MVP: Offline Timer
-- [ ] Timer screen with start/pause/stop  
-- [ ] Interval bells + end gong (local assets)  
+- [x] Timer screen with start/pause/stop  
+- [x] Interval bells + end gong (local assets)  
 - [ ] Ambient loops (rain/forest/waves) with independent volume mix  
 - [ ] Session log (local SQLite) + simple stats  
 - [ ] Basic theming (dark by default), a11y passes  
