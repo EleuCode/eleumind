@@ -23,6 +23,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/timer_service.dart';
+import '../services/audio_service_provider.dart';
 
 class TimerScreen extends ConsumerStatefulWidget {
   const TimerScreen({super.key});
@@ -33,15 +34,72 @@ class TimerScreen extends ConsumerStatefulWidget {
 
 class _TimerScreenState extends ConsumerState<TimerScreen>
     with WidgetsBindingObserver {
+  static const Duration _bellInterval = Duration(minutes: 5);
+  int _lastBellBucket = -1;
+
+  ProviderSubscription<TimerState>? _timerSub;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+
+    // Preload audio once the widget is alive.
+    Future.microtask(() => ref.read(audioServiceProvider).preload());
   }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    _timerSub ??= ref.listenManual<TimerState>(
+      timerProvider,
+      (prev, next) async {
+        final audio = ref.read(audioServiceProvider);
+
+        final finishedNow = _finishedByCountdown(prev, next);
+        if (finishedNow) {
+          await audio.playGong();
+          _lastBellBucket = -1;
+          return;
+        }
+
+        if (next.status == TimerStatus.running) {
+          final nextElapsed = _elapsed(next);
+          final prevElapsed = prev == null ? Duration.zero : _elapsed(prev);
+
+          if (_bellInterval.inSeconds > 0) {
+            final nextBucket =
+                (nextElapsed.inSeconds ~/ _bellInterval.inSeconds).clamp(0, 1 << 30);
+            final prevBucket =
+                (prevElapsed.inSeconds ~/ _bellInterval.inSeconds).clamp(0, 1 << 30);
+
+            if (nextBucket > prevBucket && nextElapsed >= _bellInterval) {
+              if (nextBucket != _lastBellBucket) {
+                _lastBellBucket = nextBucket;
+                await audio.playBell();
+              }
+            }
+          }
+        }
+      },
+    );
+  }
+
+  bool _finishedByCountdown(TimerState? prev, TimerState next) {
+    final prevWasActive =
+        prev?.status == TimerStatus.running || prev?.status == TimerStatus.paused;
+    return prevWasActive == true &&
+        next.status == TimerStatus.idle &&
+        next.remainingDuration == Duration.zero;
+  }
+
+  Duration _elapsed(TimerState s) => s.totalDuration - s.remainingDuration;
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _timerSub?.close();
     super.dispose();
   }
 
