@@ -24,3 +24,6 @@ flutter:
   assets:
     - assets/audio/bell.mp3
     - assets/audio/gong.mp3
+    - assets/audio/forest.mp3
+    - assets/audio/rain.mp3
+    - assets/audio/waves.mp3
